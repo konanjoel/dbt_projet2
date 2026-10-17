@@ -30,10 +30,14 @@ jobs:
         run: pip install dbt-snowflake==1.9.4
 
       - name: Écrire la clé privée sur le runner
-        run: echo "${{ secrets.SNOWFLAKE_PRIVATE_KEY }}" > /tmp/rsa_key.p8
-
+        env:
+          # On passe le secret via une variable d'environnement pour préserver les retours à la ligne
+          KEY_CONTENT: ${{ secrets.SNOWFLAKE_PRIVATE_KEY }}
+        run: |
+          echo "$KEY_CONTENT" > /tmp/rsa_key.p8
+          chmod 600 /tmp/rsa_key.p8
       - name: Installer les packages dbt
         run: dbt deps
 
-      - name: Construire et tester
+      - name: Construire 
         run: dbt run
