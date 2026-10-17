@@ -1,0 +1,39 @@
+name: dbt CI
+
+on:
+  pull_request:
+    branches: [master]
+
+jobs:
+  dbt-ci:
+    runs-on: ubuntu-latest
+    env:
+      SNOWFLAKE_ACCOUNT: ${{ secrets.SNOWFLAKE_ACCOUNT }}
+      SNOWFLAKE_USER: ${{ secrets.SNOWFLAKE_USER }}
+      SNOWFLAKE_ROLE: ${{ secrets.SNOWFLAKE_ROLE }}
+      SNOWFLAKE_WAREHOUSE: ${{ secrets.SNOWFLAKE_WAREHOUSE }}
+      SNOWFLAKE_DATABASE: ${{ secrets.SNOWFLAKE_DATABASE }}
+      SNOWFLAKE_PRIVATE_KEY_PATH: /tmp/rsa_key.p8
+      DBT_CI_SCHEMA: dbt_ci_pr_${{ github.event.number }}
+      DBT_PROFILES_DIR: ci
+
+    steps:
+      - name: Récupérer le code de la PR
+        uses: actions/checkout@v4
+
+      - name: Installer Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Installer dbt
+        run: pip install dbt-snowflake==1.9.4
+
+      - name: Écrire la clé privée sur le runner
+        run: echo "${{ secrets.SNOWFLAKE_PRIVATE_KEY }}" > /tmp/rsa_key.p8
+
+      - name: Installer les packages dbt
+        run: dbt deps
+
+      - name: Construire et tester
+        run: dbt run
