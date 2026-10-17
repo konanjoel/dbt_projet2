@@ -1,9 +1,3 @@
-name: dbt CI
-
-on:
-  pull_request:
-    branches: [master]
-
 jobs:
   dbt-ci:
     runs-on: ubuntu-latest
@@ -13,36 +7,14 @@ jobs:
       SNOWFLAKE_ROLE: ${{ secrets.SNOWFLAKE_ROLE }}
       SNOWFLAKE_WAREHOUSE: ${{ secrets.SNOWFLAKE_WAREHOUSE }}
       SNOWFLAKE_DATABASE: ${{ secrets.SNOWFLAKE_DATABASE }}
-      SNOWFLAKE_PRIVATE_KEY_PATH: /tmp/rsa_key.p8
+      SNOWFLAKE_PRIVATE_KEY: ${{ secrets.SNOWFLAKE_PRIVATE_KEY_DER }}
       DBT_CI_SCHEMA: dbt_ci_pr_${{ github.event.number }}
-      DBT_PROFILES_DIR: ci     # dossier contenant ci/profiles.yml
-
+      DBT_PROFILES_DIR: ci
     steps:
-      - name: Récupérer le code de la PR
-        uses: actions/checkout@v4
-
-      - name: Installer Python
-        uses: actions/setup-python@v5
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
         with:
           python-version: "3.11"
-
-      - name: Installer dbt
-        run: pip install dbt-core==1.9.4 dbt-snowflake==1.9.4
-
-      - name: Décoder et écrire la clé privée sur le runner
-        env:
-          KEY_BASE64: ${{ secrets.SNOWFLAKE_PRIVATE_KEY_B64 }}
-        run: |
-          echo "$KEY_BASE64" | base64 -d > /tmp/rsa_key.p8
-          chmod 600 /tmp/rsa_key.p8
-
-      - name: Diagnostic de la clé (sans l'afficher)
-        run: |
-          wc -l < /tmp/rsa_key.p8
-          awk '{ gsub(/\r/, "<CR>"); print length($0) }' /tmp/rsa_key.p8 | sort -n | uniq -c
-
-      - name: Installer les packages dbt
-        run: dbt deps
-
-      - name: Construire et tester
-        run: dbt build --target ci
+      - run: pip install dbt-core==1.9.4 dbt-snowflake==1.9.4
+      - run: dbt deps
+      - run: dbt build --target ci
