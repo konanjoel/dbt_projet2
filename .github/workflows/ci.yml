@@ -15,9 +15,7 @@ jobs:
       SNOWFLAKE_DATABASE: ${{ secrets.SNOWFLAKE_DATABASE }}
       SNOWFLAKE_PRIVATE_KEY_PATH: /tmp/rsa_key.p8
       DBT_CI_SCHEMA: dbt_ci_pr_${{ github.event.number }}
-      # Attention : DBT_PROFILES_DIR doit pointer vers un répertoire (ex: . ou un dossier profiles), 
-      # pas vers le nom d'une target. C'est --target qu'on utilise pour la cible.
-      DBT_PROFILES_DIR: .
+      DBT_PROFILES_DIR: ci     # dossier contenant ci/profiles.yml
 
     steps:
       - name: Récupérer le code de la PR
@@ -33,19 +31,18 @@ jobs:
 
       - name: Décoder et écrire la clé privée sur le runner
         env:
-          # On récupère le secret Base64 (qui ne craint pas les sauts de ligne)
           KEY_BASE64: ${{ secrets.SNOWFLAKE_PRIVATE_KEY_B64 }}
         run: |
-          # On décode le Base64 pour recréer proprement le fichier PEM avec ses en-têtes et retours à la ligne
           echo "$KEY_BASE64" | base64 -d > /tmp/rsa_key.p8
           chmod 600 /tmp/rsa_key.p8
-          
-          # OPTIONNEL (pour vous rassurer) : Afficher les 2 premières lignes pour vérifier que le PEM est revenu
-          # head -n 2 /tmp/rsa_key.p8
+
+      - name: Diagnostic de la clé (sans l'afficher)
+        run: |
+          wc -l < /tmp/rsa_key.p8
+          awk '{ gsub(/\r/, "<CR>"); print length($0) }' /tmp/rsa_key.p8 | sort -n | uniq -c
 
       - name: Installer les packages dbt
         run: dbt deps
 
-      - name: Construire
-        # On spécifie explicitement la target 'ci' ici si besoin
-        run: dbt run --target ci
+      - name: Construire et tester
+        run: dbt build --target ci
