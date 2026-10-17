@@ -27,7 +27,7 @@ jobs:
           python-version: "3.11"
 
       - name: Installer dbt
-        run: pip install dbt-snowflake==1.9.4
+        run: pip install dbt-core==1.9.4 dbt-snowflake==1.9.4
 
       - name: Écrire la clé privée sur le runner
         env:
