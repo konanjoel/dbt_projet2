@@ -1,29 +1,3 @@
-name: dbt CI
-
-on:
-  pull_request:
-    branches: [master]
-
-jobs:
-  dbt-ci:
-    runs-on: ubuntu-latest
-    env:
-      SNOWFLAKE_ACCOUNT: ${{ secrets.SNOWFLAKE_ACCOUNT }}
-      SNOWFLAKE_USER: ${{ secrets.SNOWFLAKE_USER }}
-      SNOWFLAKE_ROLE: ${{ secrets.SNOWFLAKE_ROLE }}
-      SNOWFLAKE_WAREHOUSE: ${{ secrets.SNOWFLAKE_WAREHOUSE }}
-      SNOWFLAKE_DATABASE: ${{ secrets.SNOWFLAKE_DATABASE }}
-      SNOWFLAKE_PRIVATE_KEY: ${{ secrets.SNOWFLAKE_PRIVATE_KEY }}
-      DBT_CI_SCHEMA: dbt_ci_pr_${{ github.event.number }}
-      DBT_PROFILES_DIR: ci
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
-        with:
-          python-version: "3.11"
-      - run: pip install dbt-core==1.9.4 dbt-snowflake==1.9.4
-      - run: dbt deps
-      - run: dbt build --target ci
 
 
 name: dbt CI
@@ -78,3 +52,32 @@ jobs:
 
       - name: Run dbt
         run: dbt run --target ci
+
+
+
+# name: dbt CI
+
+# on:
+#   pull_request:
+#     branches: [master]
+
+# jobs:
+#   dbt-ci:
+#     runs-on: ubuntu-latest
+#     env:
+#       SNOWFLAKE_ACCOUNT: ${{ secrets.SNOWFLAKE_ACCOUNT }}
+#       SNOWFLAKE_USER: ${{ secrets.SNOWFLAKE_USER }}
+#       SNOWFLAKE_ROLE: ${{ secrets.SNOWFLAKE_ROLE }}
+#       SNOWFLAKE_WAREHOUSE: ${{ secrets.SNOWFLAKE_WAREHOUSE }}
+#       SNOWFLAKE_DATABASE: ${{ secrets.SNOWFLAKE_DATABASE }}
+#       SNOWFLAKE_PRIVATE_KEY: ${{ secrets.SNOWFLAKE_PRIVATE_KEY }}
+#       DBT_CI_SCHEMA: dbt_ci_pr_${{ github.event.number }}
+#       DBT_PROFILES_DIR: ci
+#     steps:
+#       - uses: actions/checkout@v4
+#       - uses: actions/setup-python@v5
+#         with:
+#           python-version: "3.11"
+#       - run: pip install dbt-core==1.9.4 dbt-snowflake==1.9.4
+#       - run: dbt deps
+#       - run: dbt build --target ci
